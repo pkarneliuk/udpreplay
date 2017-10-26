@@ -127,13 +127,17 @@ int main(int argc, char *argv[]) {
   pcap_pkthdr header;
   const u_char *p;
   timeval tv = {0, 0};
+  std::size_t count = 0;
+  const std::uint16_t 8021QVirtualLAN = 0x8100;
   while ((p = pcap_next(handle, &header))) {
     if (header.len != header.caplen) {
       continue;
     }
     auto eth = reinterpret_cast<const ether_header *>(p);
     if (ntohs(eth->ether_type) != ETHERTYPE_IP) {
-      continue;
+      if (ntohs(eth->ether_type) == 8021QVirtualLAN) {
+        p += 4; // skip header Type: 802.1Q Virtual LAN 
+      } else continue;
     }
     auto ip = reinterpret_cast<const iphdr *>(p + sizeof(ether_header));
     if (ip->version != 4) {
@@ -164,10 +168,14 @@ int main(int argc, char *argv[]) {
     auto n = sendto(fd, d, len, 0, reinterpret_cast<sockaddr *>(&addr),
                     sizeof(addr));
     if (n != len) {
-      std::cerr << "sendto: " << strerror(errno) << std::endl;
-      return 1;
+      std::cout << "written: " << n << "/" << len << std::endl;
+      if(n == -1){
+        std::cerr << "sendto: " << strerror(errno) << std::endl;
+      }
     }
+    count++;
   }
+  std::cout << "written:" << count << std::endl;
 
   return 0;
 }
