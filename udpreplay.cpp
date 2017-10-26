@@ -128,14 +128,14 @@ int main(int argc, char *argv[]) {
   const u_char *p;
   timeval tv = {0, 0};
   std::size_t count = 0;
-  const std::uint16_t 8021QVirtualLAN = 0x8100;
+  const std::uint16_t Type8021QVirtualLAN = 0x8100;
   while ((p = pcap_next(handle, &header))) {
     if (header.len != header.caplen) {
       continue;
     }
     auto eth = reinterpret_cast<const ether_header *>(p);
     if (ntohs(eth->ether_type) != ETHERTYPE_IP) {
-      if (ntohs(eth->ether_type) == 8021QVirtualLAN) {
+      if (ntohs(eth->ether_type) == Type8021QVirtualLAN) {
         p += 4; // skip header Type: 802.1Q Virtual LAN 
       } else continue;
     }
